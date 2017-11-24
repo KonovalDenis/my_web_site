@@ -1,0 +1,41 @@
+<!-- all games page
+<a href="/Games/gomoku/">gomoku</a>
+<a href="/Games/lines/">lines</a> -->
+
+{% extends "base.html"%}
+{%load staticfiles %}
+{%block title%} {{title}} {% endblock title%}
+{% block CSS%}
+<link rel="stylesheet" type="text/css" href="{% static 'css/games.css' %}">
+{%endblock CSS%}
+{%block content%}
+
+<div id="loader"></div>
+	<div  id="bg">
+		<div id = "bodyShadow">
+			<div id = "buttonContainer">
+				<div id="gomoku" class="buttonRedirect">
+				    <a href="/Games/gomoku/">
+				        <div class="aWrap">GOMOKU
+				            <br> <img src="{% static 'images/gomoku.jpg' %}" alt="" width="100%" height="100%"></div>
+				    </a>
+				</div>
+				<div id="lines" class="buttonRedirect">
+				    <a href="/Games/lines/">
+				        <div class="aWrap">LINES
+				            <br> <img src="{% static 'images/lines.jpg' %}" alt="" width="100%" height="100%"></div>
+				    </a>
+				</div>
+			</div>
+		</div>
+	</div>
+ <script>  
+	 window.onload = function(){
+	 	var el = document.getElementById('loader');
+	 	el.style.background = "transparent";
+		setTimeout(function(){el.parentNode.removeChild(el)}, 1000);
+	 } 
+
+ </script>
+
+{% endblock content %}

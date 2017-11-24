@@ -1,0 +1,77 @@
+body {
+	/*background : green;*/
+}
+
+#currentMoveInformation {
+	display: flex;
+}
+
+#throwButtonsBlock {
+	/*display: none;*/
+	width: 98%;
+	margin: 1%;
+	display: flex;
+}
+
+.throwButton {
+	width: 7%;
+	background: green;
+	color: white;
+}
+
+.singlePlayerField {
+	
+	width : 100%;
+	height: 100px;
+	display: flex;
+	justify-content: start;
+	border: 2px solid black;
+	margin-top: 1%;
+	margin-bottom: 1%;
+}
+
+.playerName {
+	width: 15%;
+	background-color: white;
+	text-align: center;
+	font-size: 30px;
+}
+
+.singleMove {
+	width: 7.5%;
+	height: 100%;
+	color: blue;
+	border: 1px solid black;
+	background-color: 
+}
+
+.inputContainer {
+	width: 100%;
+	height: 50%;
+	display: flex;
+}
+
+.singleThrow {
+	background-color: white;
+	border: 1px solid black;
+	width: 50%;
+	height: 100%;
+	text-align: center;
+	font-size: 25px;
+}
+
+.singleMoveResult {
+	height: 50%;
+	width: 98%;
+	text-align: center;
+}
+
+.finalResult {
+	width: 10%;
+	background-color: green;
+
+}
+
+.active {
+	background: yellow; 
+}

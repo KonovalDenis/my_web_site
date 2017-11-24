@@ -1,0 +1,690 @@
+
+{% extends "base.html"%}
+{%load staticfiles %}
+{%block title%} {{title}} {% endblock title%}
+{% block CSS%}
+<link rel="stylesheet" type="text/css" href="{% static 'css/gomoku.css' %}">
+{%endblock CSS%}
+{%block content%}
+
+
+<!-- <div id="loader"></div> -->
+	<div  id="bg">
+		<div id = "bodyShadow">
+			<div id = "fieldsContainer">
+				<div  class="fieldBox">
+				    <div id="mainField"></div>
+				</div>
+				<div  class="fieldBox">
+				       <div id="menuContainer">
+				       	<div id="startGameButtons">
+					        <button id="newGameX">new game <span class='bigSign'>x</span></button>
+					        <button id="newGameO">new game <span class='bigSign'>o</span> </button>
+				        </div>
+				        <div id = "chooseTheTheme">CHOOSE COLOR THEME</div>
+				        <div id="themes">
+				            <button id='classicTheme'>Classic</button>
+				            <button id='darkTheme'>Dark</button>
+				            <button id='tenderTheme'>Tender</button>
+				        </div>
+				        <div id="guestNameWrap">
+				            <input type="text" id="guestName"> Enter Your name for the statistics </div>
+				        {% if request.user.is_authenticated %}
+				        	<div>{{ request.user.username }}</div>
+				        	<span id="gamePlayed">{{request.user.portfolio.GomokuGamesPlayed}}</span><span> Games played </span>
+				        	<script>
+				        		document.getElementById("guestNameWrap").style.display = "none";
+				        	</script>
+				        {% else %}
+				        	<div>Games played: <span id="guestGamePlayed"></span></div>
+				        {% endif %}
+				        <div id="instructionButtons">
+					        <div id="instructionButtonEn" class="instructionButton">RULES OF THE GAME</div>
+					        <div id="instructionButtonRu" class="instructionButton">ПРАВИЛА ИГРЫ</div>
+				    	</div>
+				        <div id="instructionRu" class="instruction">
+				            
+				            <p>Игра ведется в пределах поля 15 на 15 клеток. Игроки по очереди ставят крестик (х) либо нолик (о) в ПУСТУЮ клеточку. Побуждает тот, кто первый построит комбинацию "Пять в ряд". Учитываются линии по горизонтали, вертикали и диагонали.</p><hr>
+				            <p>Для того чтобы начать новую игру жми зеленую кнопку. Удачи тебе!</p>
+				        </div>
+				        <div id="instructionEn" class="instruction">
+				            <p>Gomoku or Go-moku or Five in line, is a traditional oriental game, originally from China. In Japanese language Go means five, and moku pieces (or eyes or dots). Black plays first, and players alternate in placing a stone of their color on an empty intersection. The winner is the first player to get an unbroken row of five stones horizontally, vertically, or diagonally.</p><hr>
+				            <p>To start game press the green button. GOOD LUCK!</p>
+				        </div>
+				    	
+				    </div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	
+<!-- <div id="bigWrap" style="display: flex; justify-content: space-around;">
+    <div id="mainField"></div>
+    <div>
+        
+        <div id="themes">
+            <button id='classicTheme'>Classic</button>
+            <button id='darkTheme'>Dark</button>
+            <button id='tenderTheme'>Tender</button>
+        </div>
+        <div>
+            <input type="text" id="guestName"> Если хотите вести статистику Ваших игр введите имя </div>
+        {% if request.user.is_authenticated %}
+        	<div id="gamePlayed">Games played: {{request.user.portfolio.GomokuGamesPlayed}}</div>
+        {% else %}
+        	<div>Games played<span id="guestGamePlayed"></span></div>
+        {% endif %}
+        <button id="newGameX">new game <span class='bigSign'>x</span></button>
+        <button id="newGameO">new game <span class='bigSign'>o</span> </button>
+        <div id="instruction">
+            <h1>Правила игры</h1>
+            <p>Игра ведется в пределах поля 15 на 15 клеток. Игроки по очереди ставят крестик (х) либо нолик (о) в ПУСТУЮ клеточку. Побуждает тот, кто первый построит комбинацию "Пять в ряд". Учитываются линии по горизонтали, вертикали и диагонали.</p>
+            <p>Для того чтобы начать новую игру жми зеленую кнопку. Удачи тебе!</p>
+        </div>
+    </div>
+</div> -->
+	<script> 
+
+
+
+		{%if request.user.is_authenticated%}
+
+				$.ajax ({
+					type: "GET",
+					url : "show_gomoku_game/",
+					data : {
+						"r" :'r'
+						},
+					success: function(data) {
+							document.getElementById("gamePlayed").innerHTML = data;
+							}
+				});
+				{% endif %}
+
+
+
+			document.getElementById("guestName").addEventListener("input", showGuestResult);
+
+			function showGuestResult() {
+				if (localStorage[this.value]) {
+					var guestStat = JSON.parse(localStorage[this.value]);
+					document.getElementById("guestGamePlayed").innerHTML = guestStat.games;
+				} else document.getElementById("guestGamePlayed").innerHTML = 0;
+			}
+		// var guestName = document.getElementById("guestName").value;
+		// localStorage.guestName ? 
+
+			function addActionOnCells() {
+				var kletki = document.getElementsByClassName('kletka');
+				for (var i =0; i< kletki.length; i++) {
+					kletki[i].addEventListener("click", action);
+				}
+			}
+
+			function init() {
+				localStorage.data = "";
+				localStorage.aiSign = "";
+				localStorage.playerSign = "";
+				
+				winner = false;
+				arrayField = [];
+				aiPossibleMoves = [];
+				for (var i = 0; i<=(countI-1); i++){
+					arrayField.push([])
+					for (var j = 0; j<=(countJ-1); j++){
+						arrayField[i].push({name:"empty", moveNo:"none", 
+							search:"_", indexMove: 0, indexAttack: 0, indexProtect:0});
+						document.getElementById('X'+i+'X'+j).innerHTML = "";
+					}
+				}
+			}
+
+			function makeUniqe(arr) {
+				var obj = {};
+					for (var i = 0; i < arr.length; i++) {
+						var str = arr[i];
+						obj[str] = true; // запомнить строку в виде свойства объекта
+					}
+					return Object.keys(obj); 
+				}
+
+
+		
+			var startO = document.getElementById("newGameO");
+			startO.addEventListener("click", initO);
+			var startX = document.getElementById("newGameX");
+			startX.addEventListener("click", initX);
+			var arrayField = [];
+			var aiPossibleMoves = [];
+			var winner;
+			var countI = 15, 
+				countJ = 15;
+			var mainField=document.getElementById("mainField");
+			var moveNumber;
+			var aiSign, playerSign;
+			var classic = document.getElementById("classicTheme");
+			classic.addEventListener("click", provideClassicTheme);
+			var dark = document.getElementById("darkTheme");
+			dark.addEventListener("click", provideDarkTheme);
+			var tender = document.getElementById("tenderTheme");
+			tender.addEventListener("click", provideTenderTheme);
+			var chooseTheTheme = document.getElementById("chooseTheTheme");
+			chooseTheTheme.addEventListener("click", showThemeButtons);
+
+			(document.getElementById("instructionButtonEn")).addEventListener("click", showInstructionEn);
+			(document.getElementById("instructionEn")).addEventListener("click", closeInstructionEn);
+			(document.getElementById("instructionButtonRu")).addEventListener("click", showInstructionRu);
+			(document.getElementById("instructionRu")).addEventListener("click", closeInstructionRu);
+
+			var currentTheme;
+			// debugger;
+			// if (document.documentElement.clientHeight < document.documentElement.clientWidth) {
+			// 	var myHeight = document.documentElement.clientHeight;
+			// } else {
+			// 	var myHeight = document.documentElement.clientWidth;
+			// 	document.getElementById("bigWrap").style.display = "block";
+			// }
+			// myHeight = Math.floor(myHeight);
+			// var cellHeight = Math.floor(myHeight/15);
+
+
+				for (var i = 0; i<=(countI-1); i++){	
+					for (var j = 0; j<=(countJ-1); j++){	
+						mainField.innerHTML+="<div class=kletka id = X"+i+'X'+j+"></div>";
+					}
+				}
+		
+			localStorage.currentTheme ? currentTheme = localStorage.currentTheme : currentTheme = "classic";
+			chooseTheme();
+			if (localStorage.data) {
+				arrayField = JSON.parse(localStorage.data);
+				aiSign = localStorage.aiSign;
+				playerSign = localStorage.playerSign;
+				aiPossibleMoves = JSON.parse(localStorage.aiPossibleMoves);
+				winner = JSON.parse(localStorage.winner);
+				moveNumber = +localStorage.moveNumber;
+				document.getElementById("guestName").value = localStorage.guestName;
+
+				addActionOnCells();
+
+				for (var i = 0; i<=(countI-1); i++){	
+					for (var j = 0; j<=(countJ-1); j++){	
+						if (arrayField[i][j].name == "ai") {
+							document.getElementById('X'+i+'X'+j).innerHTML = '<div class = movenumber>'+ arrayField[i][j].moveNo +'</div>'+aiSign;
+						}
+						if (arrayField[i][j].name == "player") {
+							document.getElementById('X'+i+'X'+j).innerHTML = '<div class = movenumber>'+ arrayField[i][j].moveNo +'</div>'+playerSign;
+						}
+					}
+				}
+				chooseTheme();
+
+			} 
+	
+
+		//Функция инициирующая начало игры за нолики
+		function initX() {
+			aiSign = 'o';
+			playerSign = 'x';
+			moveNumber = 0;
+
+			init()
+
+			addActionOnCells();
+			chooseTheme();
+		}
+
+		//Функция инициирующая начало игры за крестики
+		function initO() {
+			aiSign = 'x';
+			playerSign = 'o';
+			moveNumber = 1;
+
+			init();
+
+			//Do the first move in the center of the field
+			arrayField[7][7].name = 'ai';
+			arrayField[7][7].moveNo = moveNumber;
+			arrayField[7][7].search = "o";
+			document.getElementById("X7X7").innerHTML = '<div class = movenumber>'+ moveNumber +'</div>'+aiSign;
+			addPossibleMoves(7,7);
+
+
+			addActionOnCells();
+			chooseTheme();
+
+		}
+
+
+		
+
+		function action() {
+			function aiMove() {
+				
+				moveNumber +=1;
+				var randomMove = chooseBestMove();
+				
+				var index1 = randomMove.split(" ")[0];
+				var index2 = randomMove.split(" ")[1];
+				document.getElementById("X"+index1+"X"+index2).innerHTML = '<div class = movenumber>'+ moveNumber +'</div>'+aiSign;
+
+				arrayField[index1][index2].name = "ai";
+				arrayField[index1][index2].search = "o";
+				arrayField[index1][index2].moveNo = moveNumber;
+				console.log(aiPossibleMoves);
+				removePossibleMoves(index1, index2);
+				addPossibleMoves(index1, index2);
+				checkWinner();
+
+			  }
+			
+			var indexPlayer = (this.id).split('X');
+			var indexPlayer1 = +indexPlayer[1];
+			var indexPlayer2 = +indexPlayer[2];
+			if (arrayField[indexPlayer1][indexPlayer2].name == 'empty') {
+				moveNumber +=1;
+				this.style.color = "red";
+				this.innerHTML ='<div class = movenumber>'+ moveNumber +'</div>'+playerSign;
+				arrayField[indexPlayer1][indexPlayer2].name = 'player';
+				arrayField[indexPlayer1][indexPlayer2].search = 'x';
+				arrayField[indexPlayer1][indexPlayer2].moveNo = moveNumber;
+				removePossibleMoves(indexPlayer1, indexPlayer2);
+				addPossibleMoves(indexPlayer1, indexPlayer2);
+				checkWinner();
+				
+				if (winner == false) {
+					setTimeout(aiMove, 200);
+				}
+			}
+
+
+		}
+
+		function addPossibleMoves(a, b) {
+			a=+a;
+			b=+b;
+			for (var i = -2; i < 3; i++) {
+				for (var j = -2; j < 3; j++) {
+					try {
+						if (arrayField[a+i][b+j].name == 'empty' && arrayField[a+i][b+j].moveNo == 'none') {
+							aiPossibleMoves.push((a+i)+" "+(b+j));
+						}
+					} catch(err) {}
+				}
+			}
+			aiPossibleMoves = makeUniqe(aiPossibleMoves);
+		}
+
+		function removePossibleMoves(a, b){
+			for (var i =0; i < aiPossibleMoves.length; i++) {
+				if (aiPossibleMoves[i].split(" ")[0] == a && aiPossibleMoves[i].split(" ")[1] == b) {
+					aiPossibleMoves.splice(i,1);
+					return;
+				}
+			}
+		}
+
+
+
+
+		function moveRating(stringIndex) {
+
+			function createLines() {
+				diagonal1 = [];
+				diagonal2 = [];
+				vertical = [];
+				horizontal =  [];	
+				for (var j = -4; j < 5; j++) {
+					try {
+						horizontal.push(arrayField[index1][index2+j].search);
+					} catch (err) {horizontal.push('e')}
+					try {
+						vertical.push(arrayField[index1+j][index2].search);
+					} catch (err) {vertical.push('e')}
+					try {
+						diagonal1.push(arrayField[index1+j][index2+j].search);
+					} catch (err) {diagonal1.push('e')}
+					try {
+						diagonal2.push(arrayField[index1-j][index2+j].search);
+					} catch (err) {diagonal2.push('e')}
+				}
+				arrayField[index1][index2].search = '_';
+				horizontal = horizontal.join("");
+				vertical = vertical.join("");
+				diagonal1 = diagonal1.join("");
+				diagonal2 = diagonal2.join("");
+				console.log("horizontal = "+horizontal);
+				console.log("vertical = "+ vertical);
+				console.log('diagonal1 = ' + diagonal1);
+				console.log("diagonal2 = " + diagonal2);
+			}
+
+
+			function attackRating(line) {
+				if (~line.indexOf("ooooo")) arrayField[index1][index2].indexAttack += 99999;
+				if (~line.indexOf("_oooo_")) arrayField[index1][index2].indexAttack += 20000;
+				if (~line.indexOf("_oooox") || ~line.indexOf("xoooo_")) arrayField[index1][index2].indexAttack += 4000;
+				if (~line.indexOf("_o_ooox") || ~line.indexOf("_oo_oox") ||
+					~line.indexOf("_ooo_ox") || ~line.indexOf("xooo_o_") ||
+					~line.indexOf("xoo_oo_") || ~line.indexOf("xo_ooo_")) arrayField[index1][index2].indexAttack += 2000;
+				if (~line.indexOf("_ooo_")) arrayField[index1][index2].indexAttack += 3000;
+				if (~line.indexOf("_o_oo_") || ~line.indexOf("_oo_o_")) arrayField[index1][index2].indexAttack += 2300;
+				if (~line.indexOf("xooo_") || ~line.indexOf("_ooox")) arrayField[index1][index2].indexAttack += 1500;
+				if (~line.indexOf("_o_oox") || ~line.indexOf("_oo_ox") ||
+					~line.indexOf("xo_oo_") || ~line.indexOf("xoo_o_")) arrayField[index1][index2].indexAttack += 800;
+				if (~line.indexOf("_oo_")) arrayField[index1][index2].indexAttack += 200;
+			}
+			function protectRating(line) {
+				if (~line.indexOf("xxxxx")) arrayField[index1][index2].indexProtect += 99999;
+				if (~line.indexOf("_xxxx_")) arrayField[index1][index2].indexProtect += 12000;
+				if (~line.indexOf("_xxxxo") || ~line.indexOf("oxxxx_")) arrayField[index1][index2].indexProtect += 4000;
+				if (~line.indexOf("_x_xxxo") || ~line.indexOf("_xx_xxo") ||
+					~line.indexOf("_xxx_xo") || ~line.indexOf("oxxx_x_") ||
+					~line.indexOf("oxx_xx_") || ~line.indexOf("ox_xxx_")) arrayField[index1][index2].indexProtect += 2000;
+				if (~line.indexOf("_xxx_")) arrayField[index1][index2].indexProtect += 3000;
+				if (~line.indexOf("_x_xx_") || ~line.indexOf("_xx_x_")) arrayField[index1][index2].indexProtect += 2300;
+				if (~line.indexOf("oxxx_") || ~line.indexOf("_xxxo")) arrayField[index1][index2].indexProtect += 1500;
+				if (~line.indexOf("_x_xxo") || ~line.indexOf("_xx_xo") ||
+					~line.indexOf("ox_xx_") || ~line.indexOf("oxx_x_")) arrayField[index1][index2].indexProtect += 800;
+				if (~line.indexOf("_xx_")) arrayField[index1][index2].indexProtect += 200;
+			}
+				
+				var index1 = +(stringIndex.split(" ")[0]);
+				var index2 = +(stringIndex.split(" ")[1]);
+				if ((index1>2 && index2>2) && (index1<12 && index2<12)) {
+					arrayField[index1][index2].indexAttack = 50;
+					arrayField[index1][index2].indexProtect = 50;
+				} else {
+					arrayField[index1][index2].indexAttack = 0;
+					arrayField[index1][index2].indexProtect = 0;
+				}
+				arrayField[index1][index2].indexMove = 0;
+				var diagonal1 = [];
+				var diagonal2 = [];
+				var vertical = [];
+				var horizontal =  [];
+
+				arrayField[index1][index2].search = 'o';
+				createLines();
+				attackRating(horizontal);
+				attackRating(vertical);
+				attackRating(diagonal1);
+				attackRating(diagonal2);
+				console.log("attacRating = " + arrayField[index1][index2].indexAttack);
+				console.log("перед определением индекса защиты searchIndex = " + arrayField[index1][index2].search)
+				arrayField[index1][index2].search = 'x';
+				createLines();
+				protectRating(horizontal);
+				protectRating(vertical);
+				protectRating(diagonal1);
+				protectRating(diagonal2);
+				console.log("protectRating = " + arrayField[index1][index2].indexProtect);
+	
+				arrayField[index1][index2].indexMove = arrayField[index1][index2].indexAttack + Math.floor(0.9*arrayField[index1][index2].indexProtect);
+				console.log("Index of move " + index1+" "+index2+" = "+ arrayField[index1][index2].indexMove)
+		}
+
+
+		function chooseBestMove() {
+			var arrayOfRatings = [];
+			var maxRating = 0;
+			var indexOfMaxRating = 0;
+			for (var i = 0; i < aiPossibleMoves.length; i++) {
+				moveRating(aiPossibleMoves[i]);
+				var index1 = (aiPossibleMoves[i]).split(" ")[0];
+				var index2 = (aiPossibleMoves[i]).split(" ")[1];
+				arrayOfRatings.push([arrayField[index1][index2].indexMove, i]);
+				if (arrayField[index1][index2].indexMove > maxRating) {
+					maxRating = arrayField[index1][index2].indexMove;
+					indexOfMaxRating = i;
+				}	
+			}
+			console.log(arrayOfRatings);
+			return aiPossibleMoves[indexOfMaxRating];
+		}
+
+	function checkWinner() {
+			var winnerCombination = [];
+			for (var i = 0; i<=(countI-1); i++){			
+				for (var j = 0; j<=(countJ-1); j++){
+					try {
+					if ((arrayField[i][j].name == arrayField[i+1][j].name) && (arrayField[i][j].name == arrayField[i+2][j].name) && (arrayField[i][j].name == arrayField[i+3][j].name) && (arrayField[i][j].name == arrayField[i+4][j].name) && (arrayField[i][j].name != "empty")) {
+						winnerCombination.push("X"+i+'X'+j);
+						winnerCombination.push("X"+(i+1)+'X'+j);
+						winnerCombination.push("X"+(i+2)+'X'+j);
+						winnerCombination.push("X"+(i+3)+'X'+j);
+						winnerCombination.push("X"+(i+4)+'X'+j);
+					}
+					} catch(err) {
+					}
+					try {	
+					if ((arrayField[i][j].name == arrayField[i][j+1].name) && (arrayField[i][j].name == arrayField[i][j+2].name) && (arrayField[i][j].name == arrayField[i][j+3].name) && (arrayField[i][j].name == arrayField[i][j+4].name) && (arrayField[i][j].name != "empty")) {
+						winnerCombination.push("X"+i+'X'+j);
+						winnerCombination.push("X"+i+'X'+(j+1));
+						winnerCombination.push("X"+i+'X'+(j+2));
+						winnerCombination.push("X"+i+'X'+(j+3));
+						winnerCombination.push("X"+i+'X'+(j+4));
+					}
+					} catch(err) {
+					}	
+					try {
+					if ((arrayField[i][j].name == arrayField[i+1][j+1].name) && (arrayField[i][j].name == arrayField[i+2][j+2].name) && (arrayField[i][j].name == arrayField[i+3][j+3].name) && (arrayField[i][j].name == arrayField[i+4][j+4].name) && (arrayField[i][j].name != "empty")) {
+						winnerCombination.push("X"+i+'X'+j);
+						winnerCombination.push("X"+(i+1)+'X'+(j+1));
+						winnerCombination.push("X"+(i+2)+'X'+(j+2));
+						winnerCombination.push("X"+(i+3)+'X'+(j+3));
+						winnerCombination.push("X"+(i+4)+'X'+(j+4));
+					}
+					} catch(err) {
+					}	
+					try {
+					if ((arrayField[i][j].name == arrayField[i-1][j+1].name) && (arrayField[i][j].name == arrayField[i-2][j+2].name) && (arrayField[i][j].name == arrayField[i-3][j+3].name) && (arrayField[i][j].name == arrayField[i-4][j+4].name) && (arrayField[i][j].name != "empty")) {
+						winnerCombination.push("X"+i+'X'+j);
+						winnerCombination.push("X"+(i-1)+'X'+(j+1));
+						winnerCombination.push("X"+(i-2)+'X'+(j+2));
+						winnerCombination.push("X"+(i-3)+'X'+(j+3));
+						winnerCombination.push("X"+(i-4)+'X'+(j+4));
+					}
+					} catch(err) {
+					}	
+				}
+			}				
+			for (var i = 0; i < winnerCombination.length; i++) {
+				document.getElementById(winnerCombination[i]).style.background = "green";
+				}
+			if (winnerCombination.length>0) {
+				
+
+
+				winner = true;
+				var kletki = document.getElementsByClassName('kletka');
+				for (var i =0; i< kletki.length; i++) {
+					kletki[i].removeEventListener("click", action);
+				}
+				var winCell = document.getElementById(winnerCombination[0]).innerText;
+				if (winCell[winCell.length-1] == aiSign) {
+					winner = "ai";
+					setTimeout(function(){alert("Computer win on move №" + moveNumber)}, 10);
+				}
+				else {
+					winner = "player";
+					setTimeout(function(){alert("CONGRATULATIONS!!! You win on move №" + moveNumber)}, 10);
+				}
+				{%if request.user.is_authenticated%}
+
+					function getCookie(name) {
+					    var cookieValue = null;
+					    if (document.cookie && document.cookie !== '') {
+					        var cookies = document.cookie.split(';');
+					        for (var i = 0; i < cookies.length; i++) {
+					            var cookie = jQuery.trim(cookies[i]);
+					            // Does this cookie string begin with the name we want?
+					            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+					                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+					                break;
+					            }
+					        }
+					    }
+					    return cookieValue;
+					}
+				$.ajax ({
+					type: "POST",
+					url : "plus_gomoku_game/",
+					data : {
+						"csrfmiddlewaretoken" : getCookie('csrftoken'),
+						"winner" : winner
+						},
+					success: function(data) {
+							document.getElementById("gamePlayed").innerHTML = data;
+							}
+				});
+				{% else %}
+					
+
+					function changeGuestStat(guest) {
+						if (localStorage[guest]) {
+							var guestStat = JSON.parse(localStorage[guest]);
+							guestStat.games +=1;
+							winner == "ai" ? guestStat.lose +=1 : guestStat.win +=1;
+							localStorage[guest] = JSON.stringify(guestStat);
+
+						} else {
+							guestStat = {
+								games : 1,
+								win: 0,
+								lose : 0,
+							}
+							winner == "ai" ? guestStat.lose +=1 : guestStat.win +=1;
+							localStorage[guest] = JSON.stringify(guestStat);
+						}
+						document.getElementById('guestGamePlayed').innerHTML = guestStat.games;
+					}
+					guest = document.getElementById("guestName").value;
+					changeGuestStat(guest);
+				{% endif %}
+				
+				
+			}	
+			function checkNobodyWin(){
+				var emptyCells = 0;
+				for (var i = 0; i<=(countI-1); i++){			
+					for (var j = 0; j<=(countJ-1); j++){
+						if (arrayField[i][j].name == 'empty') emptyCells+=1;
+					}
+				}
+				if (emptyCells == 0) {
+					var kletki = document.getElementsByClassName('kletka');
+					for (var i =0; i< kletki.length; i++) {
+						kletki[i].removeEventListener("click", action);
+					}
+					alert("Great Job!!! End of GAME. Try again")
+				}
+			}
+			checkNobodyWin();
+			
+			var trigger = false;
+			for (var i = 0; i<=(countI-1); i++){			
+				for (var j = 0; j<=(countJ-1); j++){
+					if (arrayField[i][j].name == "player") trigger = true;
+				}
+			}
+			if (trigger && winner == false) {
+			localStorage.data = JSON.stringify(arrayField);
+			localStorage.aiSign = aiSign;
+			localStorage.playerSign = playerSign;
+			
+			localStorage.aiPossibleMoves = JSON.stringify(aiPossibleMoves);
+			localStorage.winner = winner;
+			localStorage.moveNumber = moveNumber;
+			if (document.getElementById("guestName").value != "") localStorage.guestName = document.getElementById("guestName").value;
+			}
+			if (winner) localStorage.data = '';
+
+		}
+
+		function provideDarkTheme() {
+			currentTheme = "dark";
+			localStorage.currentTheme = currentTheme;
+			// document.getElementById("mainField").style.background = "#aaaaad";
+			var kletki = document.getElementsByClassName("kletka");	
+			for (var i =0; i< kletki.length; i++) {
+				kletki[i].style.background = '#33333a';
+				kletki[i].style.border = '1px solid #aaaaad';
+				var cell = kletki[i].innerText;
+				if ((cell[cell.length-1] == aiSign) || (cell.length == 0)) {
+				    kletki[i].style.color = "white";
+				} else kletki[i].style.color = "red";
+			}
+			document.getElementById("chooseTheTheme").style.display = "block";
+			document.getElementById("themes").style.display = "none";
+		}
+
+		function provideClassicTheme() {
+			currentTheme = "classic";
+			localStorage.currentTheme = currentTheme;
+			// document.getElementById("mainField").style.background = "#3e1537";
+			var kletki = document.getElementsByClassName("kletka");	
+			for (var i =0; i< kletki.length; i++) {
+				kletki[i].style.background = '#f3f3e5';
+				kletki[i].style.border = '1px solid #3e1537';
+				var cell = kletki[i].innerText;
+				if ((cell[cell.length-1] == aiSign) || (cell.length == 0)) {
+				    kletki[i].style.color = "black";
+				} else kletki[i].style.color = "red";
+			}
+			document.getElementById("chooseTheTheme").style.display = "block";
+			document.getElementById("themes").style.display = "none";
+		}
+
+		function provideTenderTheme() {
+			currentTheme = "tender";
+			localStorage.currentTheme = currentTheme;
+			// document.getElementById("mainField").style.background = "black";
+			var kletki = document.getElementsByClassName("kletka");	
+			for (var i =0; i< kletki.length; i++) {
+				kletki[i].style.background = '#95cef7';
+				kletki[i].style.border = '1px solid black';
+				var cell = kletki[i].innerText;
+				if ((cell[cell.length-1] == aiSign) || (cell.length == 0)) {
+				    kletki[i].style.color = "black";
+				} else kletki[i].style.color = "red";
+			}
+			document.getElementById("chooseTheTheme").style.display = "block";
+			document.getElementById("themes").style.display = "none";
+		}
+
+		function chooseTheme(){
+			if (currentTheme == "classic") provideClassicTheme();
+			if (currentTheme == "dark") provideDarkTheme();
+			if (currentTheme == "tender") provideTenderTheme();
+		}
+
+		function showThemeButtons() {
+			document.getElementById("chooseTheTheme").style.display = "none";
+			document.getElementById("themes").style.display = "flex";
+		}
+
+		function showInstructionEn() {
+			
+			document.getElementById("instructionButtons").style.display = "none";
+			document.getElementById("instructionEn").style.display = "block";
+		}
+
+		function closeInstructionEn() {
+			document.getElementById("instructionButtons").style.display = "flex";
+			document.getElementById("instructionEn").style.display = "none";
+		}
+
+		function showInstructionRu() {
+			
+			document.getElementById("instructionButtons").style.display = "none";
+			document.getElementById("instructionRu").style.display = "block";
+		}
+
+		function closeInstructionRu() {
+			document.getElementById("instructionButtons").style.display = "flex";
+			document.getElementById("instructionRu").style.display = "none";
+		}
+	</script>
+{% endblock content %}

@@ -1,0 +1,591 @@
+{% extends "base.html"%}
+{%load staticfiles %}
+{%block title%} {{title}} {% endblock title%}
+{% block CSS%}
+<link rel="stylesheet" type="text/css" href="{% static 'css/lines.css' %}">
+{%endblock CSS%}
+{%block content%}
+
+<div  id="bg">
+
+		<div id = "bodyShadow">
+			<div id = "fieldsContainer">
+				<div  class="fieldBox">
+				    <div id = "mainField"></div>
+				</div>
+				<div  class="fieldBox">
+				       <div id="menuContainer">
+				       	<button id="startGame">New game</button> 
+				       	<div id="scoresWrap">
+						    <div id="currentScoreWrap">
+						        <p>CURRENT SCORE: </p>
+						        <div id="pointsTable">0</div>
+						    </div>
+						    <div id="bestScoreWrap">
+						        <p>YOUR BEST SCORE: </p>
+						        <div id="bestScoreTable">0</div>
+						    </div>
+						</div>
+				         <div id="guestNameWrap">
+				            <input type="text" id="guestName"> Enter Your name for the statistics </div>
+				       
+				        	<div>Games played: <span id="guestGamePlayed"></span></div>
+				        
+				        <input type="checkbox" id="path" checked>Show path
+						
+				   
+				    </div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+	<script>
+
+		function gameOver(){
+			function changeGuestStat(guest) {
+						if (localStorage[guest]) {
+							var guestStat = JSON.parse(localStorage[guest]);
+							guestStat.games +=1;
+							if (guestStat.bestScore <= points) guestStat.bestScore = points;
+							localStorage[guest] = JSON.stringify(guestStat);
+
+						} else {
+							guestStat = {
+								games : 1,
+								bestScore: 0,
+							}
+							if (guestStat.bestScore <= points) guestStat.bestScore = points;
+							localStorage[guest] = JSON.stringify(guestStat);
+						}
+						document.getElementById('guestGamePlayed').innerHTML = guestStat.games;
+						document.getElementById('bestScoreTable').innerHTML = guestStat.bestScore;
+					}
+					guest = document.getElementById("guestName").value;
+					changeGuestStat(guest);
+					alert("Game Over");
+		}
+
+		document.getElementById("guestName").addEventListener("input", showGuestResult);
+
+			function showGuestResult() {
+				debugger;
+				if ((localStorage[this.value]) && document.getElementById("guestName").value) {
+					var guestStat = JSON.parse(localStorage[this.value]);
+					document.getElementById("guestGamePlayed").innerHTML = guestStat.games;
+					document.getElementById('bestScoreTable').innerHTML = guestStat.bestScore;
+				} else {
+					document.getElementById("guestGamePlayed").innerHTML = 0;
+					document.getElementById('bestScoreTable').innerHTML = 0;
+				  }
+			}
+
+		document.getElementById("startGame").addEventListener("click", init);
+		function init() {
+				localStorage.currentField = "";
+
+				points = 0;
+				isSomethingDelete = false;
+
+				
+				arrayField = [];
+
+				for (var i = 0; i<=(countI-1); i++){
+					arrayField.push([])
+					for (var j = 0; j<=(countJ-1); j++){
+						arrayField[i].push({name:"empty", status:"passive"});
+						document.getElementById(i+''+j).innerHTML = "";
+						document.getElementById(i+''+j).style.boxShadow = '';
+
+					}
+				}
+				var kletki = document.getElementsByClassName('kletka');
+						for (var i =0; i< kletki.length; i++) {
+							kletki[i].addEventListener("click", ballAction);
+						}	
+
+				setTimeout(placeCircles, 1000);
+			}
+
+
+		var countI = 9, 
+			countJ = 9;
+		// (document.getElementById("mainField")).style.height = countI*62+"px";
+		// (document.getElementById("mainField")).style.width = countJ*62+"px";
+
+		function createCircle() {
+			
+			var a = Math.floor(Math.random()*countI)+""+Math.floor(Math.random()*countJ);
+			if (arrayField[Math.floor(a/10)][a%10].name == "empty"){
+				var newCircle = document.createElement('div');
+				newCircle.className = "circle circle"+color;
+				newCircle.id = "circle"+a;
+				document.getElementById(a).appendChild(newCircle);
+
+				arrayField[Math.floor(a/10)][a%10].name = "circle"+color;
+			} else createCircle()
+		}
+
+
+		function placeCircles(){
+			try {
+			//Если не сгорела линия шариков на этом ходу, то мы размещаем шарики для следующего
+			if (isSomethingDelete === false) {
+			var arrayColors = ['red','green','yellow','blue','purple', 'pink', 'aqua']; 
+			for (var i=0; i < 3; i++) {
+				color = arrayColors[Math.floor(Math.random()*(arrayColors.length))];
+			createCircle();
+			}
+			}
+			setTimeout(cleanLine, 100);
+			var countOfEmptyCells = 0;
+			for (var i = 0; i<=(countI-1); i++){			
+				for (var j = 0; j<=(countJ-1); j++){
+					if (arrayField[i][j].name == "empty") countOfEmptyCells +=1;
+				}
+			}
+			if (countOfEmptyCells == 0) gameOver();
+			} catch(error) {
+				if (error.name == "RangeError") {
+					cleanLine();
+					if (isSomethingDelete == false) {
+						gameOver();
+					} else {
+						return;
+					}
+				}
+			}
+		}
+
+
+		
+
+
+
+		function cleanLine() {
+			var deleteList = [];
+			isSomethingDelete = false;
+			for (var i = 0; i<=(countI-1); i++){			
+				for (var j = 0; j<=(countJ-1); j++){
+					try {
+					if ((arrayField[i][j].name == arrayField[i+1][j].name) && (arrayField[i][j].name == arrayField[i+2][j].name) && (arrayField[i][j].name == arrayField[i+3][j].name) && (arrayField[i][j].name == arrayField[i+4][j].name) && (arrayField[i][j].name != "empty")) {
+						deleteList.push(i+''+j);
+						deleteList.push((i+1)+''+j);
+						deleteList.push((i+2)+''+j);
+						deleteList.push((i+3)+''+j);
+						deleteList.push((i+4)+''+j);
+					}
+					} catch(err) {
+					}
+					try {	
+					if ((arrayField[i][j].name == arrayField[i][j+1].name) && (arrayField[i][j].name == arrayField[i][j+2].name) && (arrayField[i][j].name == arrayField[i][j+3].name) && (arrayField[i][j].name == arrayField[i][j+4].name) && (arrayField[i][j].name != "empty")) {
+						deleteList.push(i+''+j);
+						deleteList.push(i+''+(j+1));
+						deleteList.push(i+''+(j+2));
+						deleteList.push(i+''+(j+3));
+						deleteList.push(i+''+(j+4));
+					}
+					} catch(err) {
+					}	
+					try {
+					if ((arrayField[i][j].name == arrayField[i+1][j+1].name) && (arrayField[i][j].name == arrayField[i+2][j+2].name) && (arrayField[i][j].name == arrayField[i+3][j+3].name) && (arrayField[i][j].name == arrayField[i+4][j+4].name) && (arrayField[i][j].name != "empty")) {
+						deleteList.push(i+''+j);
+						deleteList.push((i+1)+''+(j+1));
+						deleteList.push((i+2)+''+(j+2));
+						deleteList.push((i+3)+''+(j+3));
+						deleteList.push((i+4)+''+(j+4));
+					}
+					} catch(err) {
+					}	
+					try {
+					if ((arrayField[i][j].name == arrayField[i-1][j+1].name) && (arrayField[i][j].name == arrayField[i-2][j+2].name) && (arrayField[i][j].name == arrayField[i-3][j+3].name) && (arrayField[i][j].name == arrayField[i-4][j+4].name) && (arrayField[i][j].name != "empty")) {
+						deleteList.push(i+''+j);
+						deleteList.push((i-1)+''+(j+1));
+						deleteList.push((i-2)+''+(j+2));
+						deleteList.push((i-3)+''+(j+3));
+						deleteList.push((i-4)+''+(j+4));
+					}
+					} catch(err) {
+					}	
+				}
+			}
+
+			//Оставляем в списке на удаление все шарики только по одному разу чтобы не дублировать очки
+			var obj = {};
+			for (var i = 0; i < deleteList.length; i++) {
+				var str = deleteList[i];
+				obj[str] = true; // запомнить строку в виде свойства объекта
+			}
+			deleteList = Object.keys(obj); 
+				
+			for (var i = 0; i < deleteList.length; i++) {
+				arrayField[Math.floor(deleteList[i]/10)][deleteList[i]%10].name = "empty"
+				document.getElementById(deleteList[i]).innerHTML = "";
+
+
+				points+=2;
+				isSomethingDelete = true;
+			}
+			
+			document.getElementById('pointsTable').innerHTML = ""+points;
+			console.log("points = "+points);
+			
+			
+		}
+
+
+		function ballAction() {
+
+			
+			console.log(this.id);
+			//Если клетка на которую мы нажали не пустая
+			if (arrayField[Math.floor(this.id/10)][this.id%10].name != "empty") {
+				// всем элементам нашего поля присваиваем статус ПАССИВНЫЙ
+				
+				for (var i = 0; i<=(countI-1); i++){			
+					for (var j = 0; j<=(countJ-1); j++){
+						arrayField[i][j].status = "passive";
+					}
+				}
+
+				// а тому элементу, который соответствует нажатому полю - АКТИВНЫЙ
+				arrayField[Math.floor(this.id/10)][this.id%10].status = "active";
+
+				for (var i = 0; i<=(countI-1); i++){		
+					for (var j = 0; j<=(countJ-1); j++){
+						// Совсех ячеек снимаем тень которая показывает что она активная
+						(document.getElementById(i+''+j)).style.boxShadow = '';
+						//Снимаем выделение с шариков
+						if (document.getElementById(i+''+j).firstChild) {
+						document.getElementById('circle'+i+''+j).classList.remove("animated");
+						
+						}			
+					}
+				}
+
+				// меняем стиль активной ячейки поля
+				// this.style.boxShadow = "inset 0px 0px 20px 0px rgba(0,0,0,1)"
+				console.log(this.innerHTML)
+
+				// внутрь дива содержащего круг добавляем атрибут стиль и меняем стиль активного кружочка
+
+				document.getElementById('circle'+this.id).classList.add("animated");
+				this.style.boxShadow = "inset 0px 0px 20px 0px rgba(255,255,255,1)";
+			}
+
+			//Если клетка на которую мы нажали пустая
+			if (arrayField[Math.floor(this.id/10)][this.id%10].name === "empty") {
+				var whoActive = false;
+				//Проверяем есть ли сейчас выбранный шарик готовый совершить ход
+				for (var i = 0; i<=(countI-1); i++){		
+					for (var j = 0; j<=(countJ-1); j++){
+						if (arrayField[i][j].status == "active") {
+							whoActive = i+''+j;
+						}		
+					}
+				}
+				console.log("Active is"+whoActive);
+				// Если активный шарик есть, совершаем ход
+				if (whoActive) {
+
+					//Начинаем с того что проверяем возможность совершить такой ход
+
+					//Указываем координаты начала поиска
+
+					var startPosition = whoActive;
+
+					//И координаты конечной позиции поиска
+					var finishPosition = this.id;
+					
+					for (var i = 0; i<=(countI-1); i++){		
+						for (var j = 0; j<=(countJ-1); j++){
+							arrayField[i][j].searchIndex = arrayField[i][j].name
+						}
+					}
+					//Элементу нового массива с индексом начальной позиии поиска присваиваем имя 0
+					arrayField[Math.floor(startPosition/10)][startPosition%10].searchIndex = 0;
+
+					//Создаем переменную отвечающую за индекс клетки на пути к финишу
+					var currentMark = 0;
+
+					do { 
+						var marksCount = 0;
+						for (var i = 0; i<=(countI-1); i++){		
+							for (var j = 0; j<=(countJ-1); j++){
+								if (arrayField[i][j].searchIndex == currentMark) {
+									try {
+										if (arrayField[i+1][j].searchIndex === "empty") {
+											arrayField[i+1][j].searchIndex = currentMark+1;
+											marksCount+=1;
+										}
+									} catch(err) {}
+									try {
+										if (arrayField[i-1][j].searchIndex === "empty") {
+											arrayField[i-1][j].searchIndex = currentMark+1;
+											marksCount+=1;
+										}
+									} catch(err) {}
+									try {
+										if (arrayField[i][j+1].searchIndex === "empty") {
+											arrayField[i][j+1].searchIndex = currentMark+1;
+											marksCount+=1;
+										}
+									} catch(err) {}
+									try {
+										if (arrayField[i][j-1].searchIndex === "empty") {
+											arrayField[i][j-1].searchIndex = currentMark+1;
+											marksCount+=1;
+										}
+									} catch(err) {}
+								}
+							}
+						}
+						currentMark+=1;
+					} while (marksCount>0);
+
+					console.log(arrayField[Math.floor(finishPosition/10)][finishPosition%10].searchIndex);
+
+					if (arrayField[Math.floor(finishPosition/10)][finishPosition%10].searchIndex != "empty") {
+
+						// Ищем кратчайший путь от старта до финиша и заносим его в новый массив arrayPath
+					    
+						var path = arrayField[Math.floor(finishPosition/10)][finishPosition%10].searchIndex;
+
+						finishI = Math.floor(finishPosition/10);
+						finishJ = finishPosition%10;
+	  					arrayPath = [finishI+""+finishJ,];
+
+						while (path !=1){
+							var trigger = true;
+							try {
+								if (arrayField[finishI - 1][finishJ].searchIndex == path - 1 && trigger == true) {
+									finishI -=1;
+									arrayPath.push(finishI+""+finishJ);
+									path-=1;
+									trigger = false;
+								}
+							} catch(err) {}
+							try {
+								if (arrayField[finishI + 1][finishJ].searchIndex == path - 1 && trigger == true) {
+									finishI +=1;
+									arrayPath.push(finishI+""+finishJ);
+									path-=1;
+									trigger = false;
+								}
+							} catch(err) {}
+							try {
+								if (arrayField[finishI][finishJ-1].searchIndex == path - 1 && trigger == true) {
+									finishJ -=1;
+									arrayPath.push(finishI+""+finishJ);
+									path-=1;
+									trigger = false;
+								}
+							} catch(err) {}
+							try {
+								if (arrayField[finishI][finishJ+1].searchIndex == path - 1 && trigger == true) {
+									finishJ +=1;
+									arrayPath.push(finishI+""+finishJ);
+									path-=1;
+									trigger = false;
+								}
+							} catch(err) {}
+						}
+
+						  arrayPath.reverse();
+						  console.log(arrayPath);
+
+
+
+
+						  var activeColor = arrayField[Math.floor(whoActive/10)][whoActive%10].name;
+						  console.log(activeColor);
+
+						  // элементу массива соответствующему выбранной пустой клетке присваиваем имя
+						  // цвета шарика активного на данный момент
+						  
+						  arrayField[Math.floor(this.id/10)][this.id%10].name = activeColor;
+
+						  // А элементу массива соответсвующего активному шарику ставим имя пустое и статус неактивен
+						  arrayField[Math.floor(whoActive/10)][whoActive%10].name = "empty";
+						  arrayField[Math.floor(whoActive/10)][whoActive%10].status = "passive";
+
+						  
+						  function cleanBall(){
+						  	//Из клетки которая была активной убираем шарик
+
+						  	var count = 49;
+						  	var idd = 'circle'+whoActive;
+						  	document.getElementById(idd).classList.remove("animated");
+						  	function slowClean(){
+						  		if (count>=0) {
+							  		document.getElementById(idd).style.width = count+"px";
+							  		document.getElementById(idd).style.height = count+"px";
+							  		count-=1;
+							  		setTimeout(slowClean, 6);
+						  		}
+						  	}
+						  	slowClean();
+						  	//функция физически удаляющая кружок из клеточки
+						  	//запускаем после того как кружок исчезнет визуально
+						  	function deleteCircle(){
+						  		document.getElementById(whoActive).innerHTML = "";
+
+						  	}
+						  	setTimeout(deleteCircle, 500);
+						    // И снимаем тень которая делала ее визуально активной
+						    document.getElementById(whoActive).style.boxShadow = "";
+
+						  }
+						  
+						  var cell = document.getElementById(this.id);
+						  function moveBall() {  
+						    //Прорисовываем шарик в нашем новом поле и завершаем переход
+
+						  	cell.innerHTML = "<div id = circle"+cell.id+" class = 'circle "+activeColor+"'></div>";
+
+						  	var count = 10;
+						  	var iddd = "circle"+cell.id;
+						  	
+						  	function slowAppearance(){
+						  		if (count<=85) {
+							  		document.getElementById(iddd).style.width = count+"%";
+							  		document.getElementById(iddd).style.height = count+"%";
+							  		count+=1;
+							  		setTimeout(slowAppearance, 4);
+						  		}
+						  	}
+						  	slowAppearance();
+						  }
+
+						  function drowLittleCircle(counter) {
+						  	document.getElementById(arrayPath[counter]).innerHTML = "<div class = 'littleCircle "+activeColor+"'></div>";
+						  }
+
+						  function cleanLittleCircle(counter) {
+						  	document.getElementById(arrayPath[counter]).innerHTML = "";
+						  }
+
+						  
+						  function drowPath() {
+						  	if (counterDrow < arrayPath.length) {
+						  		setTimeout(drowLittleCircle, 50, counterDrow)
+						  		counterDrow+=1;
+						  		setTimeout(drowPath, 50)
+						    }
+						  }
+
+						  function cleanPath() {
+						  	
+						  	if (counterClean < arrayPath.length) {
+						  		cleanLittleCircle(counterClean)
+						  		counterClean+=1;
+						  		setTimeout(cleanPath, 25)
+						    }
+						  }
+						  
+						  var time1 = 50;
+						  
+
+						  //Если выбрана опция показа пути
+						  if (document.getElementById("path").checked) {
+						  //Обнуляем счетчик для отрисовки нужного количества маленьких шариков
+						  counterDrow = 0;
+						  //Рисуем маленькие шарики
+						  drowPath();
+						  //Обнуляем счетчик для очистки полей от нужного количества маленьких шариков
+						  counterClean = 0;
+						  
+						  time1 = arrayPath.length*50;
+						  //Ждем пока нарисуются маленькте шарики и стираем их
+						  setTimeout(cleanPath, time1);
+						}
+
+						  var time2 = Math.ceil(time1 * 1.5);
+						  var time3 = time2+500;
+						  var time4 = time3+200;
+						  var time5 = time4+20;
+						  //Ждем пока нарисуются маленькте шарики и стираем активный шар в старом месте
+						  
+						  setTimeout(cleanBall, 50);
+						  //После стирания маленьких шариков переносим наш активный шарик в точку назначения
+						  setTimeout(moveBall, time2);
+
+						  //Ждем и стираем получившиеся линии
+						  setTimeout(cleanLine, time3);
+
+						  
+						 
+						  //Ждем и размещаем на поле новые шарики
+						  setTimeout(placeCircles, time4);
+						 
+					} else {
+						console.log("impossible!!!");
+						
+						// (document.getElementById('mainField')).style.background = 'white';
+					}
+				}
+			}
+			function saveDataToLocalStorage() {
+				localStorage.currentField = JSON.stringify(arrayField);
+				localStorage.linesPoints = points;
+				if (document.getElementById("guestName").value != "") localStorage.guestPlayerName = document.getElementById("guestName").value;
+			}
+			setTimeout(saveDataToLocalStorage, time5);
+		}
+
+		//Начальное количество очков = 0
+		var points = 0;
+		var isSomethingDelete = false;
+
+		var mainField=document.getElementById("mainField");
+		var arrayField = [];
+
+		for (var i = 0; i<=(countI-1); i++){
+			arrayField.push([])
+			for (var j = 0; j<=(countJ-1); j++){
+				arrayField[i].push({name:"empty", status:"passive"});
+				mainField.innerHTML+="<div class=kletka id = "+i+''+j+"   ></div>";
+
+			}
+		}
+		var kletki = document.getElementsByClassName('kletka');
+				for (var i =0; i< kletki.length; i++) {
+					kletki[i].addEventListener("click", ballAction);
+				}	
+
+
+		console.log(arrayField);
+		var color, colorRandom;
+
+		if (localStorage.currentField) {
+				arrayField = JSON.parse(localStorage.currentField);
+				points = +localStorage.linesPoints;
+				document.getElementById("guestName").value = localStorage.guestPlayerName;
+				document.getElementById('pointsTable').innerHTML = ""+points;
+				
+				guest = document.getElementById("guestName").value;
+				var stat = JSON.parse(localStorage[guest]);
+				document.getElementById('bestScoreTable').innerHTML = stat.bestScore;
+				document.getElementById('guestGamePlayed').innerHTML = stat.games;
+					
+					
+
+				for (var i = 0; i<=(countI-1); i++){	
+					for (var j = 0; j<=(countJ-1); j++){	
+						if (arrayField[i][j].name != "empty") {
+							document.getElementById(i+""+j).innerHTML = "<div id = circle"+i+""+j+" class = 'circle "+arrayField[i][j].name+"'></div>";
+						}
+					}
+				}
+			} 
+
+		
+		
+	
+	
+
+
+
+	</script>
+{% endblock content %}

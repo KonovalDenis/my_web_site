@@ -1,0 +1,27 @@
+{% extends "base.html"%}
+{%load staticfiles %}
+{%block title%} {{title}} {% endblock title%}
+{% block CSS%}
+<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+{%endblock CSS%}
+{%block content%}
+
+<div id="loader"></div>
+	<div  id="bg">
+		<div id = "bodyShadow">
+			<div id = "buttonContainer">
+				<div id = "cv" class="buttonRedirect" ><a href="/Resume/"><div class = "aWrap">ABOUT ME</div></a></div>
+				<div id = "games" class="buttonRedirect" ><a href="/Games/"><div class = "aWrap">PLAY GAMES</div></a></div><div>
+			</div>
+		</div>
+	</div>
+ <script>  
+	 window.onload = function(){
+	 	var el = document.getElementById('loader');
+	 	el.style.background = "transparent";
+		setTimeout(function(){el.parentNode.removeChild(el)}, 1500);
+	 } 
+	 document.getElementById("menuIco").style.display = "none";
+ </script>
+
+{% endblock content %}

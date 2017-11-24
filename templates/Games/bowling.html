@@ -1,0 +1,247 @@
+
+{% extends "base.html"%}
+{%load staticfiles %}
+{%block title%} {{title}} {% endblock title%}
+{% block CSS%}
+<link rel="stylesheet" type="text/css" href="{% static 'css/bowling.css' %}">
+{%endblock CSS%}
+{%block content%}
+
+	<div id="newGameInformaion">
+		<button id="addPlayer">Add Player</button>
+		<input type="text" id="newPlayerName" placeholder="player name">
+		<input type="button" value="Save player" id="saveNamesButton">
+	</div>
+
+	<button id="startGame">Start New Game</button>
+	<div id = "currentMoveInformation">
+		<div id="informationDisplay">Your current throw</div>
+		<button id="confirmButton">CONFIRM</button>
+	</div>
+
+	<div id = "throwButtonsBlock">
+	</div>
+
+	<div id="gameField"></div>
+
+
+
+
+<script>
+	
+	var newPlayer = 0;
+	var playersCount = {}
+	document.getElementById('saveNamesButton').addEventListener("click", addNewPlayer)
+
+	function addNewPlayer() {
+
+		
+		var playerName = document.getElementById("newPlayerName").value
+		document.getElementById("newPlayerName").value = "";
+
+		playersCount[newPlayer] = [];
+		
+
+		var gameField = document.getElementById("gameField");
+
+		gameField.innerHTML += '<div class = singlePlayerField id = player'+newPlayer+'></div>';
+		gameField.lastChild.innerHTML += '<div class = playerName>'+playerName+'</div>';
+		for (var i = 0; i < 10; i++) {
+			gameField.lastChild.innerHTML += '<div class = singleMove> <div class=inputContainer> <div class = singleThrow id = player'+newPlayer+'attempt'+i+'N1></div> <div class = singleThrow id = player'+newPlayer+'attempt'+i+'N2></div> </div> <div class = singleMoveResult id = player'+newPlayer+'attempt'+i+'result></div></div>';
+		}
+		gameField.lastChild.innerHTML += '<div class = finalResult></div>';
+		newPlayer += 1;
+	}
+
+	document.getElementById("startGame").addEventListener("click", startNewGame)
+
+	function startNewGame() {
+
+		throwButtons = document.getElementById("throwButtonsBlock");
+			for (var i = 0; i <=10; i++){
+				throwButtons.innerHTML += "<button class = throwButton id = "+i+">"+i+"</button>";
+			}
+			throwButtons = document.getElementsByClassName("throwButton")
+			for (var i = 0; i < throwButtons.length; i++) {
+				throwButtons[i].addEventListener("click", putNumber);
+			}
+
+			function putNumber() {
+				activeCell.innerHTML = this.innerHTML;
+			}
+
+		var countOfPlayers = newPlayer-1;
+		var singleThrows = document.getElementsByClassName("singleThrow");
+		var wholeThrows = document.getElementsByClassName("inputContainer");
+
+		var currentPlayerNumber = 0;
+		var currentAttempt = 0;
+		var currentThrow = 1;
+
+		var activeCell = document.getElementById("player"+currentPlayerNumber+"attempt"+currentAttempt+"N"+currentThrow);
+		activeCell.classList.add("active");
+
+		document.getElementById("confirmButton").addEventListener("click", confirmThrow)
+
+		function confirmThrow() {
+			// if we put some number in current cell:
+			if (activeCell.innerHTML != ""){
+				// current throw = number in active cell
+				bowlsShootDown = +activeCell.innerHTML;
+				count = playersCount[currentPlayerNumber];
+				if (count.length > 0) {
+					if (count[count.length-1].length == 2) {
+						count.push([]);
+						count[count.length-1].push(bowlsShootDown);
+					} else {
+						if (+count[count.length-1][0] +(+bowlsShootDown) <= 10) {
+							count[count.length-1].push(bowlsShootDown);
+						} else {
+							alert("NO WAY!!! BE CAREFUL");
+							activeCell.innerHTML = "";
+							return;
+						}
+					}
+				} else {
+					count.push([]);
+					count[count.length-1].push(bowlsShootDown);
+				}
+
+				function getCookie(name) {
+					var cookieValue = null;
+					if (document.cookie && document.cookie !== '') {
+					    var cookies = document.cookie.split(';');
+					    for (var i = 0; i < cookies.length; i++) {
+					        var cookie = jQuery.trim(cookies[i]);
+					       // Does this cookie string begin with the name we want?
+					        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+					            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+					            break;
+					        }
+					   }
+					}
+					return cookieValue;
+				}
+				$.ajax ({
+					type: "POST",
+					url : "processing_bowling_throw/",
+					data : {
+						"csrfmiddlewaretoken" : getCookie('csrftoken'),
+						"player" : currentPlayerNumber,
+						"playerCount" : JSON.stringify(playersCount[currentPlayerNumber]),
+						"currentAttempt" : currentAttempt,
+						"currentThrow" : currentThrow,
+						"value" : activeCell.innerHTML
+						},
+					success: function(data) {
+							console.log(data);
+							}
+				});
+
+
+
+
+
+
+				activeCell.classList.remove("active");
+				if (currentThrow == 1) {
+					currentThrow = 2;
+				} else {
+					currentThrow = 1;
+					if (currentPlayerNumber == countOfPlayers) {
+						currentPlayerNumber = 0;
+						currentAttempt += 1;
+					} else {
+						currentPlayerNumber +=1;
+					}
+				}
+				activeCell = document.getElementById("player"+currentPlayerNumber+"attempt"+currentAttempt+"N"+currentThrow);
+				activeCell.classList.add("active");
+			} else {
+				alert("Please do something")
+			}
+		}
+
+
+
+	}
+
+</script>
+{% endblock content %}
+
+
+
+<!-- 	<div class = "singlePlayerField">
+			<div class = "playerName"></div>
+			<div class = "singleMove">
+				<div class="inputContainer">
+					<input type="text">
+					<input type="text">
+				</div>
+				<div class = "singleMoveResult"></div>	
+			</div>
+			<div class = "singleMove">
+				<div class="inputContainer">
+					<input type="text">
+					<input type="text">
+				</div>
+				<div class = "singleMoveResult"></div>	
+			</div>
+			<div class = "singleMove">
+				<div class="inputContainer">
+					<input type="text">
+					<input type="text">
+				</div>
+				<div class = "singleMoveResult"></div>	
+			</div>
+			<div class = "singleMove">
+				<div class="inputContainer">
+					<input type="text">
+					<input type="text">
+				</div>
+				<div class = "singleMoveResult"></div>	
+			</div>
+			<div class = "singleMove">
+				<div class="inputContainer">
+					<input type="text">
+					<input type="text">
+				</div>
+				<div class = "singleMoveResult"></div>	
+			</div>
+			<div class = "singleMove">
+				<div class="inputContainer">
+					<input type="text">
+					<input type="text">
+				</div>
+				<div class = "singleMoveResult"></div>	
+			</div>
+			<div class = "singleMove">
+				<div class="inputContainer">
+					<input type="text">
+					<input type="text">
+				</div>
+				<div class = "singleMoveResult"></div>	
+			</div>
+			<div class = "singleMove">
+				<div class="inputContainer">
+					<input type="text">
+					<input type="text">
+				</div>
+				<div class = "singleMoveResult"></div>	
+			</div>
+			<div class = "singleMove">
+				<div class="inputContainer">
+					<input type="text">
+					<input type="text">
+				</div>
+				<div class = "singleMoveResult"></div>	
+			</div>
+			<div class = "singleMove">
+				<div class="inputContainer">
+					<input type="text">
+					<input type="text">
+				</div>
+				<div class = "singleMoveResult"></div>	
+			</div>
+			<div class = "finalResult"></div>
+		</div> -->

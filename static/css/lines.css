@@ -1,0 +1,297 @@
+body {
+
+	background: #14141f;
+}
+
+
+
+#settings {
+	
+	width: 300px;
+	height: 200px;
+	color: white;
+	font-size: 20px;
+}
+
+#scoresWrap {
+	display: flex;
+	justify-content: center;
+	width: 100%;
+	margin-top: 2%;
+	margin-bottom: 2%;
+	/*height: 40px;
+	font-size: 30px;
+	background: red;
+	text-align: center;
+	padding-top:2%;
+	padding-bottom: 2%;
+*/}
+
+#pointsTable {
+	background-color: red;	
+	font-size: 60px;
+	text-align: center;
+	
+}
+
+#bestScoreTable {
+	background-color: green;
+	font-size: 60px;
+	text-align: center;
+	
+}
+
+#currentScoreWrap, #bestScoreWrap {
+	margin: 1%;
+}
+
+#guestNameWrap {
+	margin-top: 1%;
+	margin-bottom: 1%;
+}
+
+
+#mainField {
+	height: 100%;
+	width: 100%;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-content: stretch;
+
+}
+
+.kletka {
+	cursor: pointer;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 10%;
+	height: 10%;
+	margin: 0.5%;
+	background: grey;
+	border-radius: 4px;
+}
+
+.circle {
+	/*margin: 4px;*/
+	width: 85%;
+	height: 85%;
+	border-radius: 50%;
+	cursor: pointer;
+	box-shadow: inset 0px 0px 20px 0px rgba(0,0,0,1);
+}
+
+.cbalink{
+	display: none;
+}
+
+.littleCircle {
+	width: 16%;
+	height: 16%;
+	border-radius: 50px;
+	cursor: pointer;
+}
+
+.circletransparent {
+	background: transparent;
+}
+
+.circlered {
+	background: red;
+}
+
+.circlegreen {
+	background: green;
+}
+
+.circleyellow {
+	background: yellow;
+}
+
+.circleblue {
+	background: blue;
+}
+
+.circlepurple {
+	background: purple;
+}
+
+.circlepink {
+	background: pink;
+}
+
+.circleaqua {
+	background: aqua;
+}
+
+
+	.animated {
+    animation: active 0.7s infinite;
+}
+	
+
+
+@keyframes active {
+
+ 0% {
+	margin-top: -9.5%;
+	-webkit-animation-timing-function: ease-in;
+    }
+    40% {
+
+    }
+    50% {
+	margin-top: 13%;
+	height: 77%;
+	-webkit-animtion-timing-function: ease-out;
+    }
+    55% {
+	margin-top: 13%;
+	height: 74%;
+	
+	-webkit-animation-timing-function: ease-in;
+    }
+	 60% {
+	top: -9.5%;
+	height: 76%;
+	border-radius: 50%;
+	-webkit-animation-timing-function: ease-out;
+    }
+
+    65% {
+	top: -9.5%;
+	height: 80%;
+	border-radius: 50%;
+	-webkit-animation-timing-function: ease-out;
+    }
+    95% {
+	margin-top: -9.5%;
+	-webkit-animation-timing-function: ease-in;
+    }
+    100% {
+	margin-top: -9.5%;
+	-webkit-animation-timing-function: ease-in;
+    }
+
+
+}
+
+
+
+
+ html, body {
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+	font-family: arial;
+	
+}
+
+a, a:hover, a:active, a:link, a:visited { /* ссылка не в общем списке чтобы не сбрасывать outline по умолчанию */
+margin:0;
+padding:0;
+font-size:100%;
+vertical-align:baseline;
+background:transparent;
+outline:none;
+text-decoration: none;
+}
+
+.aWrap {
+	width: 100%;
+	height: 100%;
+	padding: 5%;
+	text-align: center;
+	color: white;
+	font-size: 30px;
+}
+
+
+#bg {
+	width: 100 %;
+	min-height: 100vh;
+	background-image: url("../images/mainBackground.jpg");
+
+	background-repeat: no-repeat;
+    background-size:  cover;
+}
+
+#bodyShadow {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100 %;
+	min-height: 100vh;
+	background: rgba(51, 45, 45, 0.5)
+}
+
+#fieldsContainer {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	padding: 5%;
+	
+
+}
+
+.fieldBox {
+	display:flex;
+	justify-content: center;
+	align-items: center;
+	width: 40vw;
+	height: 40vw;
+	background: rgba(55, 55, 55, 0.8);
+/*	border: 3px solid white;*/
+	margin: 1%;
+	
+}
+
+#menuContainer {
+	color:white;
+	width: 90%;
+	height: 90%;
+}
+
+input {
+	color: black;
+}
+
+#startGame {
+	margin-top:10px;
+	margin-bottom: 10px;
+  background: #167507;
+  width: 100%;
+ 
+  -webkit-border-radius: 2;
+  -moz-border-radius: 2;
+  border-radius: 2px;
+  text-shadow: 4px 5px 6px #666666;
+  /*-webkit-box-shadow: 5px 4px 7px #666666;
+  -moz-box-shadow: 5px 4px 7px #666666;
+  box-shadow: 5px 4px 7px #666666;*/
+  font-family: Arial;
+  color: #f5f5f5;
+  font-size: 25px;
+  padding: 15px 15px 15px 15px;
+  text-decoration: none;
+}
+
+#startGame:hover {
+  background: #e0000f;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@media (min-device-width: 320px) and (max-device-width: 720px) and (orientation: portrait) {
+	
+    #fieldsContainer {
+    	flex-direction: column;
+    }
+    .fieldBox {
+    	width: 90vw;
+    	height: 90vw;
+    }
+}
